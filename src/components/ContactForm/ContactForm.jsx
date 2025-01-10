@@ -1,5 +1,9 @@
+import { useDispatch, useSelector } from 'react-redux';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { nanoid } from 'nanoid';
+import { addContact } from '../../redux/contactsSlice';
+import { selectContacts } from '../../redux/contactsSlice';
 import css from './ContactForm.module.css';
 
 const validationSchema = Yup.object({
@@ -17,15 +21,29 @@ const ErrorMessageWrapper = ({ children }) => (
   <div className={css.error}>{children}</div>
 );
 
-const ContactForm = ({ onSubmit }) => {
+const ContactForm = () => {
+  const dispatch = useDispatch();
+  const contacts = useSelector(selectContacts);
+
+  const handleSubmit = (values, { resetForm }) => {
+    const isExist = contacts.some(
+      contact => contact.name.toLowerCase() === values.name.toLowerCase()
+    );
+
+    if (isExist) {
+      alert(`${values.name} is already in contacts`);
+      return;
+    }
+
+    dispatch(addContact({ id: nanoid(), ...values }));
+    resetForm();
+  };
+
   return (
     <Formik
       initialValues={{ name: '', number: '' }}
       validationSchema={validationSchema}
-      onSubmit={(values, { resetForm }) => {
-        onSubmit(values);
-        resetForm();
-      }}
+      onSubmit={handleSubmit}
     >
       <Form className={css.form}>
         <div className={css.fieldWrapper}>
